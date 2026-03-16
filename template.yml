@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Picklebit API Backend
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.11
+    Environment:
+      Variables:
+        DB_HOST: "picklebit-dev-db.cvyiieeiuh5v.us-east-2.rds.amazonaws.com"
+        DB_NAME: "postgres"
+        DB_USER: "postgres"
+
+Resources:
+  PicklebitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.handler
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-0969fd4e50e56c0c0"
+        SubnetIds:
+          - "subnet-07c427c3208752d5b"
+          - "subnet-07e5c54c37976e191"
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+
+Outputs:
+  PicklebitApiUrl:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
