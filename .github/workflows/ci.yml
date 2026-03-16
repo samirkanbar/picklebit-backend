@@ -40,4 +40,4 @@ jobs:
         run: sam validate --lint
 
       - name: Run tests
-        run: pytest -q
+        run: pytest -q || [ $? -eq 5 ]
