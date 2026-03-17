@@ -1,61 +1,49 @@
 name: Deploy
-
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
-    branches:
-      - main
-  workflow_dispatch:
+  pull_request:
+    types: [closed]
+    branches: [main]
 
 permissions:
-  id-token: write
+  id-token: write # Required for OIDC
   contents: read
-
-concurrency:
-  group: deploy-main
-  # Change this to false if you want every push to finish, 
-  # even if you push again immediately.
-  cancel-in-progress: false 
 
 jobs:
   deploy:
-    name: Deploy with SAM
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # This ensures it ONLY runs if the PR was actually merged, not just closed
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    timeout-minutes: 30
     env:
       AWS_REGION: 'us-east-2'
-      # This tells GitHub to ignore the Node 20 warning for now
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4 # v4 is fine, ignore the warning for now
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies & Test
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest
+          pytest -q || [ $? -eq 5 ] # Run tests, ignore "no tests found" error
 
       - name: Set up AWS SAM CLI
         uses: aws-actions/setup-sam@v2
 
       - name: Configure AWS credentials (OIDC)
-        env:
-          ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-        if: ${{ env.ROLE_ARN != '' }}
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Build SAM application
-        run: sam build --use-container
-
-      - name: Deploy SAM application
+      - name: Build and Deploy
         run: |
+          sam build --use-container
           sam deploy \
             --stack-name picklebit-backend \
             --no-confirm-changeset \
