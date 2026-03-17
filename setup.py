@@ -1,36 +1,27 @@
 import os
 import re
 import yaml
-import sys
+from pathlib import Path
 
 def get_all_files_and_types(directory="src"):
     all_files_and_types = []
     TYPE_PATTERN = r'\"\"\"TYPE:\s*(.*?)\"\"\"'
     HANDLER_PATTERN = r'def\s*handler\s*\('
-    backslash_character = "/"
-
-    for foldername, subfolders, filenames in os.walk(directory):
-        for filename in filenames:
-            if filename.endswith('.py'):
-                # Ensure we are looking inside src/routes
-                if not foldername.replace("\\", "/").startswith(f"src/routes"):
-                    continue
+    
+    # Use Pathlib to find all .py files in src/routes
+    base_path = Path(directory) / "routes"
+    
+    # rglob finds all .py files recursively inside src/routes
+    for file_path in base_path.rglob("*.py"):
+        with open(file_path, 'r') as f:
+            content = f.read()
+            type_match = re.search(TYPE_PATTERN, content)
+            handler_match = re.search(HANDLER_PATTERN, content)
+            
+            if type_match and handler_match:
+                # Convert Path object to string for the rest of the script
+                all_files_and_types.append((str(file_path), type_match.group(1)))
                 
-                full_path = os.path.join(foldername, filename)
-                with open(full_path, 'r') as f:
-                    content = f.read()
-                    type_match = re.search(TYPE_PATTERN, content)
-                    handler_match = re.search(HANDLER_PATTERN, content)
-                    
-                    if type_match and handler_match:
-                        type_value = type_match.group(1)
-                        # Handle dynamic routes like [id] -> {id}
-                        if "[" in full_path and "]" in full_path:
-                            full_path = full_path.replace("[", "{").replace("]", "}")
-                        all_files_and_types.append((full_path, type_value))
-                    else: 
-                        # Skip files that don't have the required handler and TYPE comment
-                        continue
     return all_files_and_types
 
 def generate_functions_dict(files_and_types):
