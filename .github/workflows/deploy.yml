@@ -2,10 +2,10 @@ name: Deploy
 
 on:
   pull_request:
-    types: [closed]
+    types:
+      - closed
     branches:
       - main
-  workflow_dispatch: # <--- THIS ADDS A "RUN" BUTTON IN GITHUB
 
 permissions:
   id-token: write
@@ -13,34 +13,44 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    # This ensures the deploy ONLY happens if the PR was merged, not just closed
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Set up Node.js 20
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Install Node Dependencies
-      run: npm install
+      - name: Install Node Dependencies
+        run: npm install
 
-    - name: Generate serverless.yml
-      run: python setup.py
+      - name: Generate serverless.yml
+        run: python3 setup.py
 
-    - name: Configure AWS credentials (OIDC)
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-        aws-region: us-east-2
+      - name: Create env file
+        run: |
+          touch .env
+          echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+          echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+          echo DB_USER=${{ secrets.DB_USER }} >> .env
+          echo DB_PASS=${{ secrets.DB_PASS }} >> .env
 
-    - name: Serverless Deploy
-      run: npx serverless deploy --stage prod
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-2
+
+      - name: Serverless Deploy
+        run: npx serverless deploy --stage prod
