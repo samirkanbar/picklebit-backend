@@ -1,11 +1,10 @@
 name: Deploy
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -13,10 +12,7 @@ permissions:
 
 jobs:
   deploy:
-    # This ensures the deploy ONLY happens if the PR was merged, not just closed
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,16 +33,7 @@ jobs:
       - name: Generate serverless.yml
         run: python3 setup.py
 
-      - name: Create env file
-        run: |
-          touch .env
-          echo DB_HOST=${{ secrets.DB_HOST }} >> .env
-          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-          echo DB_PORT=${{ secrets.DB_PORT }} >> .env
-          echo DB_USER=${{ secrets.DB_USER }} >> .env
-          echo DB_PASS=${{ secrets.DB_PASS }} >> .env
-
-      - name: Configure AWS credentials (OIDC)
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
