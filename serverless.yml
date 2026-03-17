@@ -1,0 +1,42 @@
+service: picklebit-backend
+frameworkVersion: '3'
+useDotenv: true
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-2
+  stage: ${opt:stage, 'prod'}
+  vpc:
+    securityGroupIds:
+    - sg-0969fd4e50e56c0c0
+    subnetIds:
+    - subnet-0eafaa3c7f3ac2ebb
+    - subnet-0058f0e451fa765c8
+    - subnet-04cf165420f395a9c
+package:
+  patterns:
+  - '!node_modules/**'
+  - '!package-lock.json'
+  - '!package.json'
+  - '!.env'
+  - '!venv/**'
+  - '!.pytest_cache/**'
+plugins:
+- serverless-python-requirements
+- serverless-dotenv-plugin
+custom:
+  pythonRequirements:
+    dockerizePip: 'true'
+    layer: 'true'
+    slim: 'true'
+    zip: 'true'
+functions:
+  test:
+    timeout: 20
+    handler: src/routes/test/index.handler
+    events:
+    - httpApi:
+        method: post
+        path: /test
+    layers:
+    - Ref: PythonRequirementsLambdaLayer
