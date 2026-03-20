@@ -39,3 +39,12 @@ functions:
         path: /test
     layers:
     - Ref: PythonRequirementsLambdaLayer
+  example_helloWorld:
+    timeout: 20
+    handler: src/routes/example/helloWorld/index.handler
+    events:
+    - httpApi:
+        method: get
+        path: /example/helloWorld
+    layers:
+    - Ref: PythonRequirementsLambdaLayer
