@@ -6,16 +6,16 @@ CREATE TABLE users (
     first_name        VARCHAR(100) NOT NULL,
     last_name         VARCHAR(100) NOT NULL,
     email             VARCHAR(255) UNIQUE NOT NULL,
-    phone             VARCHAR(20),
-    avatar_url        TEXT,
+    phone             VARCHAR(20), --decide format
+    profile_picture_url     VARCHAR(50),
     city              VARCHAR(255),
     state             VARCHAR(255),
     date_of_birth     DATE,
-    member_since      DATE DEFAULT CURRENT_DATE,
+    member_since      DATE DEFAULT CURRENT_DATE, --dont need
     created_at        TIMESTAMP DEFAULT NOW(),
 );
 
-CREATE TABLE friendships (
+CREATE TABLE friendships ( -- save this table for later
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
     friend_id   UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -27,7 +27,7 @@ CREATE TABLE friendships (
 -- ============================================
 -- 2. PLAYER PROFILES & RATINGS
 -- ============================================
-CREATE TABLE player_profiles (
+CREATE TABLE player_rating_profiles ( -- save this table for later
     id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id                 UUID REFERENCES users(id) ON DELETE CASCADE,
 
@@ -73,7 +73,7 @@ CREATE TABLE player_profiles (
 -- ============================================
 -- 3. SESSIONS & MATCHES (Live Tracking)
 -- ============================================
-CREATE TABLE sessions (
+CREATE TABLE sessions ( -- save for later
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id       UUID REFERENCES users(id),
     court_id      UUID REFERENCES courts(id),
@@ -87,7 +87,7 @@ CREATE TABLE sessions (
     created_at    TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE session_players (
+CREATE TABLE session_players ( -- save for later
     session_id  UUID REFERENCES sessions(id) ON DELETE CASCADE,
     user_id     UUID REFERENCES users(id),
     role        VARCHAR(20) DEFAULT 'participant', -- 'owner', 'participant', 'monitor' <--int would work here too
@@ -96,29 +96,29 @@ CREATE TABLE session_players (
 
 CREATE TABLE matches (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id       UUID REFERENCES sessions(id) ON DELETE CASCADE,
+    session_id       UUID REFERENCES sessions(id) ON DELETE CASCADE, -- save
     created_by       UUID REFERENCES users(id),
-    venue_id         UUID REFERENCES courts(id),
-    game_number      INT DEFAULT 1,
-    match_type       VARCHAR(50) DEFAULT 'singles', -- 'singles' | 'doubles'
-    status           VARCHAR(20) DEFAULT 'pending', -- 'pending', 'active', 'completed'
+    venue_id         UUID REFERENCES courts(id), --save
+    match_number     INT DEFAULT 1, -- save
+    match_type       VARCHAR(50) DEFAULT 'singles', -- 'singles' | 'doubles' -- int
+    status           VARCHAR(20) DEFAULT 'pending', -- 'pending', 'active', 'completed' -- int
 
     -- Game Configuration
     play_to          INT DEFAULT 11,   -- 11 | 15 | 21
     win_by           INT DEFAULT 2,
     team1_name       VARCHAR(100),
     team2_name       VARCHAR(100),
-    initial_server   INT CHECK (initial_server IN (1, 2)),
-    serving_team     INT CHECK (serving_team IN (1, 2)),
-    server_number    INT CHECK (server_number IN (1, 2)), -- doubles: server 1 or 2
+    -- initial_server   INT CHECK (initial_server IN (1, 2)),
+    -- serving_team     INT CHECK (serving_team IN (1, 2)),
+    -- server_number    INT CHECK (server_number IN (1, 2)), -- doubles: server 1 or 2
 
     -- Result
     final_score_team1  INT,
     final_score_team2  INT,
-    rallies            INT DEFAULT 0,
-    duration_seconds   INT,
+    rallies            INT DEFAULT 0, -- save
+    duration           TIME,
 
-    -- Flags
+    -- Flags -- save
     has_monitor      BOOLEAN DEFAULT false,
     monitor_id       UUID REFERENCES users(id),
     score_edited     BOOLEAN DEFAULT false,
@@ -151,7 +151,7 @@ CREATE TABLE score_events (
     recorded_at      TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE health_metrics (
+CREATE TABLE match_health_metrics ( -- refer to healthkit for future modification of attributes
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id         UUID REFERENCES matches(id) ON DELETE CASCADE,
     user_id          UUID REFERENCES users(id),
@@ -166,7 +166,7 @@ CREATE TABLE health_metrics (
 -- ============================================
 -- 5. AI ALERTS & ACHIEVEMENTS
 -- ============================================
-CREATE TABLE ai_alerts (
+CREATE TABLE ai_alerts ( -- save for later
     id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id              UUID REFERENCES users(id),
     issue_type           VARCHAR(100),
@@ -191,7 +191,7 @@ CREATE TABLE achievements (
 -- ============================================
 -- 6. POST-MATCH RATINGS
 -- ============================================
-CREATE TABLE match_ratings (
+CREATE TABLE match_ratings ( -- save for later
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id        UUID REFERENCES matches(id) ON DELETE CASCADE,
     rater_id        UUID REFERENCES users(id),
