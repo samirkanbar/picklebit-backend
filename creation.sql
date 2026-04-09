@@ -97,7 +97,7 @@ CREATE TABLE session_players ( -- save for later
 CREATE TABLE matches (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id       UUID REFERENCES sessions(id) ON DELETE CASCADE, -- save
-    created_by       UUID REFERENCES users(id),
+    hist_id          UUID REFERENCES users(id),
     venue_id         UUID REFERENCES courts(id), --save
     match_number     INT DEFAULT 1, -- save
     match_type       VARCHAR(50) DEFAULT 'singles', -- 'singles' | 'doubles' -- int
@@ -134,23 +134,12 @@ CREATE TABLE match_players (
     user_id     UUID REFERENCES users(id),
     team        INT NOT NULL CHECK (team IN (1, 2)),
     is_winner   BOOLEAN,
+    is_host     BOOLEAN
 );
 
 -- ============================================
 -- 4. LIVE DATA (Scoring & Health)
 -- ============================================
-CREATE TABLE score_events (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    match_id         UUID REFERENCES matches(id) ON DELETE CASCADE,
-    team             INT CHECK (team IN (1, 2)),
-    points           INT DEFAULT 1,
-    source           VARCHAR(20), -- 'manual', 'voice', 'watch'
-    raw_voice_input  TEXT,
-    is_undone        BOOLEAN DEFAULT false,
-    undone_at        TIMESTAMP,
-    recorded_at      TIMESTAMP DEFAULT NOW()
-);
-
 CREATE TABLE match_health_metrics ( -- refer to healthkit for future modification of attributes
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     match_id         UUID REFERENCES matches(id) ON DELETE CASCADE,
