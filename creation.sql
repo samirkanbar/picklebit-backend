@@ -97,7 +97,7 @@ CREATE TABLE session_players ( -- save for later
 CREATE TABLE matches (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id       UUID REFERENCES sessions(id) ON DELETE CASCADE, -- save
-    hist_id          UUID REFERENCES users(id),
+    host_id          UUID REFERENCES users(id),
     venue_id         UUID REFERENCES courts(id), --save
     match_number     INT DEFAULT 1, -- save
     match_type       VARCHAR(50) DEFAULT 'singles', -- 'singles' | 'doubles' -- int
@@ -169,7 +169,7 @@ CREATE TABLE ai_alerts ( -- save for later
     created_at           TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE achievements (
+CREATE TABLE achievements ( -- save
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID REFERENCES users(id),
     type        VARCHAR(50),
