@@ -19,7 +19,7 @@ CREATE TABLE friendships (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
     friend_id   UUID REFERENCES users(id) ON DELETE CASCADE,
-    status      VARCHAR(20) DEFAULT 'pending', -- 'pending', 'accepted', 'blocked'
+    status      VARCHAR(20) DEFAULT 'pending', -- 'pending', 'accepted', 'blocked' <--THIS CAN BE AN INT TO SAVE SPACE!
     created_at  TIMESTAMP DEFAULT NOW(),
     UNIQUE(user_id, friend_id)
 );
@@ -78,9 +78,9 @@ CREATE TABLE sessions (
     user_id       UUID REFERENCES users(id),
     court_id      UUID REFERENCES courts(id),
     location_text VARCHAR(255),        -- fallback for unrecognized venues
-    session_type  VARCHAR(50),         -- 'Practice', 'Tournament', 'Casual'
-    input_mode    VARCHAR(20) DEFAULT 'manual', -- 'voice' | 'manual'
-    ai_summary    TEXT,
+    session_type  VARCHAR(50),         -- 'Practice', 'Tournament', 'Casual' <--Don't need right now
+    input_mode    VARCHAR(20) DEFAULT 'manual', -- 'voice' | 'manual' <-- Dont need
+    ai_summary    TEXT, --<--Don't need
     total_duration INT,                -- planned duration in minutes
     started_at    TIMESTAMP,
     ended_at      TIMESTAMP,
@@ -90,7 +90,7 @@ CREATE TABLE sessions (
 CREATE TABLE session_players (
     session_id  UUID REFERENCES sessions(id) ON DELETE CASCADE,
     user_id     UUID REFERENCES users(id),
-    role        VARCHAR(20) DEFAULT 'participant', -- 'owner', 'participant', 'monitor'
+    role        VARCHAR(20) DEFAULT 'participant', -- 'owner', 'participant', 'monitor' <--int would work here too
     PRIMARY KEY (session_id, user_id)
 );
 
